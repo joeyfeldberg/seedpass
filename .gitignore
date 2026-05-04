@@ -1,0 +1,10 @@
+/target/
+/.idea/
+/.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Local Seedpass dogfooding/test state
+/.seedpass-test/
+*.seed

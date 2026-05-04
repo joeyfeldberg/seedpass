@@ -1,0 +1,40 @@
+[workspace]
+members = [
+    "crates/seedpass-core",
+    "crates/seedpass-codec",
+    "crates/seedpass-crypto",
+    "crates/seedpass-derive",
+    "crates/seedpass-storage",
+    "crates/seedpass-cli",
+]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+license = "MIT OR Apache-2.0"
+repository = "https://example.invalid/seedpass"
+rust-version = "1.76"
+
+[workspace.dependencies]
+aes-gcm = "0.10"
+anyhow = "1"
+argon2 = "0.5"
+base64 = "0.22"
+clap = { version = "4", features = ["derive"] }
+data-encoding = "2"
+directories = "6"
+hkdf = "0.12"
+hmac = "0.12"
+rand = "0.9"
+rpassword = "7"
+tempfile = "3"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml = "0.9"
+sha2 = "0.10"
+subtle = "2"
+thiserror = "1"
+time = { version = "0.3", features = ["formatting", "parsing", "serde"] }
+ulid = "1"
+zeroize = { version = "1", features = ["derive"] }
+proptest = "1"

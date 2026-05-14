@@ -1,0 +1,29 @@
+{
+  "canonical_recipe_json": "{\"credential_uid\":\"cred_01HX8K8M9G6TD9CZQK7BW6MQD2\",\"format\":\"seedpass-recipe-v1\",\"profile_snapshot\":{\"kind\":\"password\",\"length\":24,\"min_digits\":1,\"min_lowercase\":1,\"min_symbols\":1,\"min_uppercase\":1,\"symbols\":\"-_.!@#$%^&*\"},\"public_salt\":\"EBESExQVFhcYGRobHB0eHw\",\"purpose\":\"web-password\",\"scheme\":\"seedpass-v1\",\"version\":1}",
+  "canonical_recipe_sha256": "1b9db81934885a6a86f8c19d15474627d05388488ddf00a9a57fdea3838d4085",
+  "credential_key_hex": "2ab5efb1b767248f26ad052ab85278bd03677f9dbf189ae12bdf89077239d745",
+  "id": "v1-draft-001",
+  "master_password": "correct horse battery staple",
+  "password": "s#kB-$sXyS7oWlb$I&50#JqC",
+  "root_seed_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+  "seed_envelope": {
+    "cipher": {
+      "name": "aes-256-gcm",
+      "nonce": "MDEyMzQ1Njc4OTo7"
+    },
+    "ciphertext": "AQW0BgT6vnDqUUEhs1aAoMBsjdC7s0uDFcAe2jKa0JIa2Xs1li4zrFGpjHr1wNmc",
+    "format": "seedpass-seed-v1",
+    "kdf": {
+      "iterations": 2,
+      "memory_kib": 8192,
+      "name": "argon2id",
+      "parallelism": 1,
+      "salt": "ICEiIyQlJicoKSorLC0uLw",
+      "version": 19
+    }
+  },
+  "seed_envelope_aad_json": "{\"cipher\":{\"name\":\"aes-256-gcm\",\"nonce\":\"MDEyMzQ1Njc4OTo7\"},\"format\":\"seedpass-seed-v1\",\"kdf\":{\"iterations\":2,\"memory_kib\":8192,\"name\":\"argon2id\",\"parallelism\":1,\"salt\":\"ICEiIyQlJicoKSorLC0uLw\",\"version\":19}}",
+  "seed_fingerprint_display": "SPSEED-PSXY-OUAH-G6VN-YYDC-Y3JE-L337-5Q",
+  "seed_fingerprint_raw_hex": "7caf87500737aadc6062c6d245ef7fec",
+  "warning": "Draft vector; may change before 1.0."
+}

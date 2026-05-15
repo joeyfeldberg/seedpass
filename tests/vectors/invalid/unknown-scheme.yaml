@@ -1,0 +1,16 @@
+format: seedpass-recipes-v1
+seeds:
+  personal:
+    fingerprint: SPSEED-EXAM-PLEE-XAMP-LEEX-AMPL-EEXA-MP
+    path: seeds/personal.seed
+credentials:
+  - uid: cred_01HX8K8M9G6TD9CZQK7BW6MQD2
+    alias: unknown-scheme
+    purpose: web-password
+    versions:
+      - number: 1
+        status: active
+        seed: personal
+        scheme: seedpass-v999
+        public_salt: EBESExQVFhcYGRobHB0eHw
+        profile_snapshot: { kind: password, length: 24, min_uppercase: 1, min_lowercase: 1, min_digits: 1, min_symbols: 0, symbols: "" }

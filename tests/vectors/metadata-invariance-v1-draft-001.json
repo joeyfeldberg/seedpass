@@ -1,0 +1,35 @@
+{
+  "id": "metadata-invariance-v1-draft-001",
+  "warning": "Draft vector; may change before 1.0.",
+  "base": {
+    "alias": "github-personal",
+    "service": "github.com",
+    "username": "alice@example.com",
+    "tags": ["dev", "critical"],
+    "created_at": "2026-05-10T00:00:00Z",
+    "seed_label": "personal",
+    "seed_path": "seeds/personal.seed",
+    "seed_fingerprint": "SPSEED-PSXY-OUAH-G6VN-YYDC-Y3JE-L337-5Q"
+  },
+  "changed": {
+    "alias": "github-main",
+    "service": "github.enterprise.example",
+    "username": "alice@new.example",
+    "tags": ["renamed", "still-critical"],
+    "created_at": "2030-01-01T00:00:00Z",
+    "seed_label": "renamed-personal",
+    "seed_path": "seeds/renamed-personal.seed",
+    "seed_fingerprint": "SPSEED-PSXY-OUAH-G6VN-YYDC-Y3JE-L337-5Q"
+  },
+  "expected_canonical_recipe_json": "{\"credential_uid\":\"cred_01HX8K8M9G6TD9CZQK7BW6MQD2\",\"format\":\"seedpass-recipe-v1\",\"profile_snapshot\":{\"kind\":\"password\",\"length\":24,\"min_digits\":1,\"min_lowercase\":1,\"min_symbols\":1,\"min_uppercase\":1,\"symbols\":\"-_.!@#$%^&*\"},\"public_salt\":\"EBESExQVFhcYGRobHB0eHw\",\"purpose\":\"web-password\",\"scheme\":\"seedpass-v1\",\"version\":1}",
+  "excluded_fields": [
+    "alias",
+    "service",
+    "username",
+    "tags",
+    "created_at",
+    "seed_label",
+    "seed_path",
+    "seed_fingerprint"
+  ]
+}

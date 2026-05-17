@@ -1,0 +1,45 @@
+id: rotation-state-machine-v1-draft-001
+warning: Draft vector; may change before 1.0.
+initial:
+  versions:
+    - number: 1
+      status: active
+allowed_steps:
+  - command: rotate
+    result:
+      versions:
+        - number: 1
+          status: active
+        - number: 2
+          status: pending
+  - command: rotate --confirm
+    result:
+      versions:
+        - number: 1
+          status: retired
+        - number: 2
+          status: active
+  - command: rotate
+    result:
+      versions:
+        - number: 1
+          status: retired
+        - number: 2
+          status: active
+        - number: 3
+          status: pending
+  - command: rotate --abort
+    result:
+      versions:
+        - number: 1
+          status: retired
+        - number: 2
+          status: active
+        - number: 3
+          status: failed
+invariants:
+  - At most one active version.
+  - At most one pending version.
+  - Confirming pending retires old active atomically.
+  - Aborting pending marks it failed and preserves active.
+  - Failed versions are not derivable in MVP.

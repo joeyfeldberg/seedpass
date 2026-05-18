@@ -72,7 +72,7 @@ pub fn reject_duplicate_yaml_keys(input: &str) -> Result<(), CodecError> {
                 reason: "tabs are not allowed in Seedpass YAML",
             });
         }
-        if without_comment.contains(['{', '}']) {
+        if without_comment.contains(['{', '}']) && !is_empty_collection_value(without_comment) {
             return Err(CodecError::UnsupportedYamlSyntax {
                 line: line_number,
                 reason: "flow mappings are not allowed in Seedpass YAML",
@@ -115,6 +115,13 @@ pub fn reject_duplicate_yaml_keys(input: &str) -> Result<(), CodecError> {
     }
 
     Ok(())
+}
+
+fn is_empty_collection_value(line: &str) -> bool {
+    let Some((_, value)) = line.split_once(':') else {
+        return false;
+    };
+    matches!(value.trim(), "{}" | "[]")
 }
 
 fn yaml_mapping_key(line: &str) -> Option<String> {
@@ -289,6 +296,18 @@ mod tests {
             reject_duplicate_yaml_keys("format: {a: 1, a: 2}\n"),
             Err(CodecError::UnsupportedYamlSyntax { .. })
         ));
+    }
+
+    #[test]
+    fn empty_collection_values_from_serde_yaml_are_allowed() {
+        assert_eq!(
+            reject_duplicate_yaml_keys("format: seedpass-directory-v1\nentries: {}\n"),
+            Ok(())
+        );
+        assert_eq!(
+            reject_duplicate_yaml_keys("format: seedpass-directory-v1\ntags: []\n"),
+            Ok(())
+        );
     }
 
     #[test]

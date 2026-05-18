@@ -18,6 +18,7 @@ seedpass-derive = { path = "../seedpass-derive" }
 seedpass-storage = { path = "../seedpass-storage" }
 serde_json.workspace = true
 serde_yaml.workspace = true
+tar.workspace = true
 time.workspace = true
 ulid.workspace = true
 zeroize.workspace = true

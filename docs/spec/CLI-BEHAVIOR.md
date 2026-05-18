@@ -41,6 +41,8 @@ seedpass rename <old> <new>
 seedpass rotate <alias>
 seedpass rotate <alias> --confirm
 seedpass rotate <alias> --abort
+seedpass backup --out <archive.tar>
+seedpass restore <archive.tar>
 seedpass status
 seedpass doctor
 seedpass explain <alias>
@@ -57,8 +59,8 @@ seedpass account rename <old> <new>
 seedpass account confirm <alias>
 seedpass pass <alias> --show|--clip
 seedpass validate
-seedpass backup status
-seedpass backup test --path <backup>
+seedpass backup-check status
+seedpass backup-check test --path <backup>
 seedpass seed fingerprint <seed>
 seedpass seed verify <seed>
 seedpass seed rewrap <seed>

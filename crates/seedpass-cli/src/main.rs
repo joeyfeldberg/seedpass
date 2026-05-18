@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::fs;
 use std::io::{self, Write};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine as _;
@@ -20,7 +20,7 @@ use seedpass_crypto::{
 };
 use seedpass_derive::{derive_password, recipe_hash};
 use seedpass_storage::{
-    append_event_best_effort, ensure_private_dir, load_workspace, save_seed_atomic,
+    append_event_best_effort, atomic_write, ensure_private_dir, load_workspace, save_seed_atomic,
     save_yaml_atomic, WorkspaceLock, WorkspacePaths,
 };
 use time::format_description::well_known::Rfc3339;
@@ -60,12 +60,16 @@ enum Command {
     Rotate(RotateArgs),
     /// Show workspace status and recovery files.
     Status,
+    /// Create a recovery backup archive.
+    Backup(BackupArgs),
+    /// Restore from a backup archive.
+    Restore(RestoreArgs),
     /// Check for problems.
     Doctor,
 
-    /// Advanced backup/restore-check commands.
+    /// Advanced backup-check commands.
     #[command(hide = true)]
-    Backup {
+    BackupCheck {
         #[command(subcommand)]
         command: BackupCommand,
     },
@@ -186,6 +190,22 @@ enum SeedCommand {
     },
 }
 
+#[derive(Debug, Args)]
+struct BackupArgs {
+    /// Output tar file.
+    #[arg(long)]
+    out: PathBuf,
+}
+
+#[derive(Debug, Args)]
+struct RestoreArgs {
+    /// Backup tar file to restore.
+    archive: PathBuf,
+    /// Replace an existing config directory.
+    #[arg(long)]
+    force: bool,
+}
+
 #[derive(Debug, Subcommand)]
 enum BackupCommand {
     Status,
@@ -220,10 +240,12 @@ fn main() -> anyhow::Result<()> {
         Some(Command::Account { command }) => run_account(&paths, command)?,
         Some(Command::Pass(args)) => run_pass(&paths, args)?,
         Some(Command::Rotate(args)) => run_rotate(&paths, args)?,
-        Some(Command::Status) => run_backup(&paths, BackupCommand::Status)?,
+        Some(Command::Status) => run_backup_check(&paths, BackupCommand::Status)?,
+        Some(Command::Backup(args)) => run_backup_create(&paths, args)?,
+        Some(Command::Restore(args)) => run_restore(&paths, args)?,
         Some(Command::Explain { alias }) => run_explain(&paths, &alias)?,
         Some(Command::Seed { command }) => run_seed(command)?,
-        Some(Command::Backup { command }) => run_backup(&paths, command)?,
+        Some(Command::BackupCheck { command }) => run_backup_check(&paths, command)?,
         None => println!("Seedpass workspace scaffold is ready. Use --help for commands."),
     }
 
@@ -646,7 +668,114 @@ fn run_seed(command: SeedCommand) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn run_backup(paths: &WorkspacePaths, command: BackupCommand) -> anyhow::Result<()> {
+fn run_backup_create(paths: &WorkspacePaths, args: BackupArgs) -> anyhow::Result<()> {
+    let workspace = load_workspace(paths)?;
+    let report = workspace.validate(Some(paths));
+    if !report.is_hard_valid() {
+        anyhow::bail!("workspace has hard validation errors; run `seedpass doctor` first");
+    }
+
+    if let Some(parent) = args.out.parent() {
+        if !parent.as_os_str().is_empty() {
+            fs::create_dir_all(parent)?;
+        }
+    }
+
+    let file = fs::File::create(&args.out)?;
+    let mut archive = tar::Builder::new(file);
+    append_if_exists(
+        &mut archive,
+        &paths.recipes_file(),
+        "seedpass-backup-v1/recipes.yaml",
+    )?;
+    append_if_exists(
+        &mut archive,
+        &paths.directory_file(),
+        "seedpass-backup-v1/directory.yaml",
+    )?;
+    append_if_exists(
+        &mut archive,
+        &paths.profiles_file(),
+        "seedpass-backup-v1/profiles.yaml",
+    )?;
+    for seed in workspace.recipes.seeds.values() {
+        let seed_path = paths.resolve_seed_file(&seed.path)?;
+        let archive_path = format!("seedpass-backup-v1/{}", seed.path);
+        append_if_exists(&mut archive, &seed_path, &archive_path)?;
+    }
+    archive.finish()?;
+
+    println!("Backup created: {}", args.out.display());
+    println!("This backup contains your encrypted seed file.");
+    println!("You still need your master password to recover passwords.");
+    Ok(())
+}
+
+fn run_restore(paths: &WorkspacePaths, args: RestoreArgs) -> anyhow::Result<()> {
+    if paths.config_dir.exists() && !args.force {
+        anyhow::bail!(
+            "config directory already exists: {} (use --force to replace files)",
+            paths.config_dir.display()
+        );
+    }
+    confirm_prompt("Restore this backup into the config directory?")?;
+    ensure_private_dir(&paths.config_dir)?;
+
+    let file = fs::File::open(&args.archive)?;
+    let mut archive = tar::Archive::new(file);
+    for entry in archive.entries()? {
+        let mut entry = entry?;
+        if !entry.header().entry_type().is_file() {
+            continue;
+        }
+        let entry_path = entry.path()?.into_owned();
+        let relative = backup_relative_path(&entry_path)?;
+        let target = paths.config_dir.join(&relative);
+        let mut bytes = Vec::new();
+        std::io::Read::read_to_end(&mut entry, &mut bytes)?;
+        let secret = relative.starts_with("seeds/");
+        atomic_write(&target, &bytes, secret)?;
+    }
+
+    println!("Restored backup into {}", paths.config_dir.display());
+    println!("Run `seedpass doctor` to check the restored workspace.");
+    Ok(())
+}
+
+fn append_if_exists(
+    archive: &mut tar::Builder<fs::File>,
+    source: &Path,
+    archive_path: &str,
+) -> anyhow::Result<()> {
+    if source.exists() {
+        archive.append_path_with_name(source, archive_path)?;
+    }
+    Ok(())
+}
+
+fn backup_relative_path(path: &Path) -> anyhow::Result<PathBuf> {
+    let mut components = path.components();
+    let Some(first) = components.next() else {
+        anyhow::bail!("empty backup path");
+    };
+    if first.as_os_str() != "seedpass-backup-v1" {
+        anyhow::bail!("unexpected backup path: {}", path.display());
+    }
+    let relative = components.as_path();
+    let text = relative
+        .to_str()
+        .ok_or_else(|| anyhow::anyhow!("backup path is not valid UTF-8"))?;
+    let allowed = text == "recipes.yaml"
+        || text == "directory.yaml"
+        || text == "profiles.yaml"
+        || (text.starts_with("seeds/") && !text.contains(".."));
+    if !allowed || relative.is_absolute() {
+        anyhow::bail!("unsafe or unsupported backup path: {}", path.display());
+    }
+    Ok(relative.to_path_buf())
+}
+
+fn run_backup_check(paths: &WorkspacePaths, command: BackupCommand) -> anyhow::Result<()> {
     match command {
         BackupCommand::Status => {
             let workspace = load_workspace(paths)?;

@@ -16,6 +16,7 @@ seedpass add github --service github.com --username alice@example.com
 seedpass get github --pending --show
 seedpass confirm github
 seedpass get github --show
+seedpass backup --out ~/seedpass-backup.tar
 ```
 
 ## How it works
@@ -37,13 +38,27 @@ seedpass add <name>       # add a login
 seedpass get <name>       # get a password; use --show for terminal output
 seedpass confirm <name>   # mark a pending password as accepted
 seedpass rotate <name>    # create a pending replacement
+seedpass backup --out <file>
+seedpass restore <file>
 seedpass status           # show recovery files
 seedpass doctor           # check for problems
 ```
 
 ## Recovery
 
-Back up these files:
+Create a backup archive:
+
+```bash
+seedpass backup --out ~/seedpass-backup.tar
+```
+
+Restore it later with:
+
+```bash
+seedpass restore ~/seedpass-backup.tar
+```
+
+The backup contains:
 
 ```text
 recipes.yaml
